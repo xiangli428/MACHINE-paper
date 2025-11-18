@@ -1,6 +1,6 @@
 # MACHINE-paper
 
-This repository contains the analysis code and results supporting the findings of the MACHINE manuscript (https://www.medrxiv.org/content/10.1101/2025.09.28.25336857v2).
+This repository contains the analysis code and results supporting the findings of the MACHINE manuscript (https://www.researchsquare.com/article/rs-7737326/v1).
 The provided materials include:
 
 - Scripts for data processing and analysis.
