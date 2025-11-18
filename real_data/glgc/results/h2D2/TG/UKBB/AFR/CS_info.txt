@@ -1,0 +1,2 @@
+CS	CS.size	CS.nlog10minp	CS.purity	CS.SNP	CS.tags
+CS:AFR-19-75-1	1	12.91	1	rs12721054	

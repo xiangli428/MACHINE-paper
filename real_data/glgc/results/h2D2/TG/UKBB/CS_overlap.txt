@@ -1,0 +1,1 @@
+pheno	db	chromosome	block	CS.EUR	CS.AFR	CS.EAS	union.size	union.SNP	intersect.size	intersect.SNP

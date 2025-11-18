@@ -1,0 +1,2 @@
+pheno	db	chromosome	block	CS.EUR	CS.AFR	CS.EAS	union.size	union.SNP
+TG	UKBB	11	129	CS:EUR-11-129-9	CS:AFR-11-129-2	CS:EAS-11-129-1	2	rs651821,rs662799

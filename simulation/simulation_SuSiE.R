@@ -1,0 +1,323 @@
+options(stringsAsFactors = F, check.names = F)
+
+library(readr)
+library(magrittr)
+library(tidyr)
+library(dplyr)
+library(Matrix)
+library(foreach)
+library(doParallel)
+library(ggplot2)
+library(ggpubr)
+library(scales)
+library(susieR)
+
+setwd("simulation")
+
+select_block_info = read.delim("data/select_block_info.txt")
+select_block_info %<>% arrange(num_variants)
+select_block_info[101:200,] %<>% arrange(-num_variants)
+select_block = sort(select_block_info$block)
+
+n_causal = data.frame("n" = c(5,3,1),
+                      "n1" = c(0,1,2),
+                      "n2" = c(0,1,2))
+
+N1 = 2e5
+N2_seq = c(2e4,2e5)
+suffix = c("N1-200000", sprintf("N2-%d", N2_seq))
+idx = c(1,2,2)
+
+group_bound = data.frame("l" = c(0,0.1,0.5,0.9),
+                         "u" = c(0.1,0.5,0.9,1.1))
+
+registerDoParallel(50)
+
+Dir = "SuSiE"
+
+for(s in 1:3)
+{
+  foreach(block = select_block_info$block, .combine = "c", .inorder = F) %dopar%
+  {
+    dir.create(sprintf("results/setting_%s/%s/%s",
+                       s, Dir, block), recursive = T)
+    
+    data_full = readRDS(sprintf("data/setting_%s/%d.RData", s, block))
+    R = readRDS(sprintf("data/LD/%d.RData", block))
+    
+    for(k in 1:2)
+    {
+      R[[k]] %<>% as.matrix()
+      diag(R[[k]]) = 1
+    }
+    
+    for(k in 1:3)
+    {
+      data = data_full[,c(1:12,12+k)]
+      n = c(N1, N2_seq)[k]
+      
+      z = data[,13]
+      
+      tic = Sys.time()
+      fit_susie = susie_rss(z = z,
+                            R = R[[idx[k]]],
+                            var_y = 1,
+                            n = n,
+                            L = 5,
+                            estimate_residual_variance = T,
+                            refine = T)
+      toc = Sys.time()
+      
+      saveRDS(fit_susie, file = sprintf(
+        "results/setting_%s/%s/%s/fit_susie_%s.RData", 
+        s, Dir, block, suffix[k]))
+      
+      data$PIP = fit_susie$pip
+      
+      data$CS = NA
+      if(length(fit_susie$sets$cs) > 0)
+      {
+        for(l in 1:length(fit_susie$sets$cs))
+        {
+          data$CS[fit_susie$sets$cs[[l]]] = names(fit_susie$sets$cs)[l]
+        }
+      }
+      
+      saveRDS(data, file = sprintf(
+        "results/setting_%s/%s/%s/data_%s.RData", 
+        s, Dir, block, suffix[k]))
+      
+      result_CS95 = data.frame("block" = block,
+                               "coverage" = 0,
+                               "size" = 0,
+                               "min.abs.corr" = 0)[-1,]
+      if(length(fit_susie$sets$cs) > 0)
+      {
+        for(l in 1:length(fit_susie$sets$cs))
+        {
+          result_CS95 %<>% rbind(
+            data.frame("block" = block,
+                       "coverage" = sum(
+                         data[fit_susie$sets$cs[[l]], 8+idx[k]]),
+                       "size" = length(fit_susie$sets$cs[[l]]),
+                       "min.abs.corr" = fit_susie$sets$purity$min.abs.corr[l]))
+        }
+      }
+      
+      write_delim(result_CS95, sprintf(
+        "results/setting_%s/%s/%s/result_CS95_%s.txt", 
+        s, Dir, block, suffix[k]), delim = '\t')
+      
+      result = data.frame(
+        "block" = block,
+        "time" = difftime(toc, tic, units = "secs"))
+      
+      if(k > 1)
+      {
+        m = k - 1
+        
+        data = list()
+        data[[1]] = readRDS(sprintf(
+          "results/setting_%s/%s/%s/data_%s.RData",
+          s, Dir, block, suffix[1]))
+        data[[2]] = readRDS(sprintf(
+          "results/setting_%s/%s/%s/data_%s.RData",
+          s, Dir, block, suffix[m+1]))
+        
+        fit_susie = list()
+        fit_susie[[1]] = readRDS(sprintf(
+          "results/setting_%s/%s/%s/fit_susie_%s.RData",
+          s, Dir, block, suffix[1]))
+        fit_susie[[2]] = readRDS(sprintf(
+          "results/setting_%s/%s/%s/fit_susie_%s.RData",
+          s, Dir, block, suffix[m+1]))
+        
+        result_CS95_cross = data.frame("block" = block,
+                                       "coverage" = 0,
+                                       "size" = 0,
+                                       "min.abs.corr" = 0)[-1,]
+        result_CS95_cross %<>% rbind(
+          foreach(kk = 1:2, .combine = "rbind") %do%
+          {
+            if(length(fit_susie[[kk]]$sets$cs) > 0)
+            {
+              foreach(l = 1:length(fit_susie[[kk]]$sets$cs), .combine = "rbind") %do%
+              {
+                set = fit_susie[[kk]]$sets$cs[[l]]
+                
+                data.frame("block" = block,
+                           "coverage" = sum(data[[1]][set,9] | data[[1]][set,10]),
+                           "size" = length(set),
+                           "min.abs.corr" = fit_susie[[kk]]$sets$purity$min.abs.corr[l])
+              }
+            }
+          }
+        )
+        
+        write_delim(result_CS95_cross, sprintf(
+          "results/setting_%s/%s/%s/result_CS95_N2-%d_cross.txt",
+          s, Dir, block, N2_seq[m]), delim = '\t')
+        
+        result_CS95_shared = data.frame("block" = block,
+                                        "coverage" = 0,
+                                        "size" = 0,
+                                        "min.abs.corr" = 0)[-1,]
+        if(length(fit_susie[[1]]$sets$cs) > 0 & length(fit_susie[[2]]$sets$cs) > 0)
+        {
+          for(l1 in 1:length(fit_susie[[1]]$sets$cs))
+          {
+            set1 = fit_susie[[1]]$sets$cs[[l1]]
+            for(l2 in 1:length(fit_susie[[2]]$sets$cs))
+            {
+              set2 = fit_susie[[2]]$sets$cs[[l2]]
+              if(length(intersect(set1,set2)) > 0)
+              {
+                result_CS95_shared %<>% rbind(data.frame(
+                  "block" = block,
+                  "coverage" = sum(data[[1]][intersect(set1,set2),9] &
+                                     data[[1]][intersect(set1,set2),10]),
+                  "size" = length(union(set1,set2)),
+                  "min.abs.corr" = min(fit_susie[[1]]$sets$purity$min.abs.corr[l1],
+                                       fit_susie[[2]]$sets$purity$min.abs.corr[l2]))
+                )
+              }
+            }
+          }
+        }
+        
+        write_delim(result_CS95_shared, sprintf(
+          "results/setting_%s/%s/%s/result_CS95_N2-%d_shared.txt",
+          s, Dir, block, N2_seq[m]), delim = '\t')
+        
+        result$CS95_causal = sum((!is.na(data[[1]]$CS) | !is.na(data[[2]]$CS)) &
+                                   (data[[1]]$causal_1 | data[[1]]$causal_2))
+        result$CS95_causal_1 = sum(!is.na(data[[1]]$CS) & data[[1]]$causal_1)
+        result$CS95_causal_2 = sum(!is.na(data[[2]]$CS) & data[[1]]$causal_2)
+        result$CS95_causal_0 = sum((!is.na(data[[1]]$CS) & !is.na(data[[2]]$CS)) &
+                                     (data[[1]]$causal_1 & data[[1]]$causal_2))
+      }
+      
+      write_delim(result, sprintf(
+        "results/setting_%s/%s/%s/result_%s.txt", 
+        s, Dir, block, suffix[k]), delim = '\t')
+    }
+    
+    NULL
+  }
+  
+  for(k in 1:3)
+  {
+    results = foreach(block = select_block, .combine = "rbind") %dopar%
+    {
+      read.delim(sprintf(
+        "results/setting_%s/%s/%s/result_%s.txt",
+        s, Dir, block, suffix[k]))
+    }
+    write_delim(results, sprintf(
+      "results/setting_%s/%s/results_%s.txt",
+      s, Dir, suffix[k]), delim = '\t')
+    
+    results_CS95 = foreach(block = select_block, .combine = "rbind") %dopar%
+    {
+      read.delim(sprintf(
+        "results/setting_%s/%s/%s/result_CS95_%s.txt",
+        s, Dir, block, suffix[k]))
+    }
+    write_delim(results_CS95, sprintf(
+      "results/setting_%s/%s/results_CS95_%s.txt",
+      s, Dir, suffix[k]), delim = '\t')
+    
+    results_CS95_cross = foreach(block = select_block, .combine = "rbind") %dopar%
+    {
+      read.delim(sprintf(
+        "results/setting_%s/%s/%s/result_CS95_N2-%d_cross.txt",
+        s, Dir, block, N2_seq[m]))
+    }
+    write_delim(results_CS95_cross, sprintf(
+      "results/setting_%s/%s/results_CS95_N2-%d_cross.txt",
+      s, Dir, N2_seq[m]), delim = '\t')
+    
+    results_CS95_shared = foreach(block = select_block, .combine = "rbind") %dopar%
+    {
+      read.delim(sprintf(
+        "results/setting_%s/%s/%s/result_CS95_N2-%d_shared.txt",
+        s, Dir, block, N2_seq[m]))
+    }
+    write_delim(results_CS95_shared, sprintf(
+      "results/setting_%s/%s/results_CS95_N2-%d_shared.txt",
+      s, Dir, N2_seq[m]), delim = '\t')
+  }
+  
+  # Calibration
+  
+  data_1 = foreach(block = select_block, .combine = "rbind") %dopar%
+  {
+    readRDS(sprintf(
+      "results/setting_%s/%s/%s/data_%s.RData",
+      s, Dir, block, suffix[1]))
+  }
+  
+  for(m in 1:2)
+  {
+    data_2 = foreach(block = select_block, .combine = "rbind") %dopar%
+    {
+      readRDS(sprintf(
+        "results/setting_%s/%s/%s/data_%s.RData",
+        s, Dir, block, suffix[m+1]))
+    }
+    
+    calibration = list()
+    
+    PIP = pmax(data_1$PIP, data_2$PIP)
+    calibration[["cross"]] = foreach(g = 1:4, .combine = "rbind") %dopar%
+    {
+      idx = which(PIP >= group_bound$l[g] & PIP < group_bound$u[g])
+      n = length(idx)
+      
+      data.frame("group" = g,
+                 "n" = n,
+                 "Expected" = sum(PIP[idx]) / n,
+                 "Prop" = sum((data_1$causal_1 | data_2$causal_2)[idx]) / n)
+    }
+    
+    PIP = pmin(data_1$PIP, data_2$PIP)
+    calibration[["shared"]] = foreach(g = 1:4, .combine = "rbind") %dopar%
+    {
+      idx = which(PIP >= group_bound$l[g] & PIP < group_bound$u[g])
+      n = length(idx)
+      
+      data.frame("group" = g,
+                 "n" = n,
+                 "Expected" = sum(PIP[idx]) / n,
+                 "Prop" = sum((data_1$causal_1 & data_2$causal_2)[idx]) / n)
+    }
+    
+    PIP = data_1$PIP
+    calibration[["pop1"]] = foreach(g = 1:4, .combine = "rbind") %dopar%
+    {
+      idx = which(PIP >= group_bound$l[g] & PIP < group_bound$u[g])
+      n = length(idx)
+      
+      data.frame("group" = g,
+                 "n" = n,
+                 "Expected" = sum(PIP[idx]) / n,
+                 "Prop" = sum(data_1$causal_1[idx]) / n)
+    }
+    
+    PIP = data_2$PIP
+    calibration[["pop2"]] = foreach(g = 1:4, .combine = "rbind") %dopar%
+    {
+      idx = which(PIP >= group_bound$l[g] & PIP < group_bound$u[g])
+      n = length(idx)
+      
+      data.frame("group" = g,
+                 "n" = n,
+                 "Expected" = sum(PIP[idx]) / n,
+                 "Prop" = sum(data_2$causal_2[idx]) / n)
+    }
+    
+    saveRDS(calibration, sprintf(
+      "results/setting_%s/%s/calibration_N2-%d.RData",
+      s, Dir, N2_seq[m]))
+  }
+}

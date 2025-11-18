@@ -1,0 +1,4 @@
+pid	num_variants_0.95	num_variants_0.5	num_CS95	num_variants_CS95
+EUR	59	292	886	19436
+AFR	13	70	54	354
+EAS	3	26	70	2731
