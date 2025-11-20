@@ -307,14 +307,6 @@ ggsave("FDR_power_UKBB.pdf",
                                    family = NULL), align = "v"),
        device = "pdf", width = 9, height = 12.31, units = "in", bg = "white")
 
-ggsave("FDR_power_UKBB_0.9.pdf",
-       ggarrange(p_FDR_0.9, p_power_0.9, 
-                 nrow = 2, ncol = 1, common.legend = T, legend = "bottom",
-                 heights = c(1,1), labels = c("a","b"),
-                 font.label = list(size = 12, color = "black", face = "bold", 
-                                   family = NULL), align = "v"),
-       device = "pdf", width = 9, height = 6.51, units = "in", bg = "white")
-
 # 1kg LD
 ylimits = foreach(pop = pops, .combine = "rbind") %do%
 {
@@ -441,11 +433,3 @@ ggsave("FDR_power_1kG.pdf",
                  font.label = list(size = 12, color = "black", face = "bold", 
                                    family = NULL), align = "v"),
        device = "pdf", width = 9, height = 12, units = "in", bg = "white")
-
-ggsave("FDR_power_1kG_0.9.pdf",
-       ggarrange(p_FDR_0.9, p_power_0.9, 
-                 nrow = 2, ncol = 1, common.legend = T, legend = "bottom",
-                 heights = c(1,1), labels = c("a","b"),
-                 font.label = list(size = 12, color = "black", face = "bold", 
-                                   family = NULL), align = "v"),
-       device = "pdf", width = 9, height = 6.2, units = "in", bg = "white")
