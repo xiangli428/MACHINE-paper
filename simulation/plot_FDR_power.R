@@ -137,9 +137,9 @@ data_CS = foreach(s = 1:3, .combine = "rbind") %do%
                      "power_CS95" = p,
                      "power_CS95_sd" = sqrt(p * (1-p) / (n_causal[s,pop] * 200)),
                      "size_CS95" = mean(results_CS95[[pop]]$size),
-                     "size_sd" = sd(results_CS95[[pop]]$size) / sqrt(n),
+                     "size_CS95_sd" = sd(results_CS95[[pop]]$size) / sqrt(n),
                      "purity_CS95" = mean(results_CS95[[pop]]$min.abs.corr),
-                     "purity_sd" = sd(results_CS95[[pop]]$min.abs.corr) / sqrt(n))
+                     "purity_CS95_sd" = sd(results_CS95[[pop]]$min.abs.corr) / sqrt(n))
         }
       }
     }

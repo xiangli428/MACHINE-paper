@@ -9,6 +9,7 @@ library(doParallel)
 library(ggplot2)
 library(cowplot)
 library(ggpubr)
+library(ggh4x)
 library(latex2exp)
 library(scales)
 library(Hmisc)
@@ -17,7 +18,7 @@ setwd("simulation/results")
 
 source("../simulation_setting.R")
 
-data_CS = readRDS("CS95_coverage_power.RData")
+data = readRDS("FDR_power.RData")
 
 custom_theme = function()
 {
@@ -42,18 +43,18 @@ custom_theme = function()
 
 ylimits = foreach(pop = pops, .combine = "rbind") %do%
 {
-  sub_CS = filter(data_CS, LD == lds[1] & POP == pop)
+  sub = filter(data, LD == lds[1] & POP == pop)
   
   data.frame("POP" = pop,
-             "purity_l" = floor(min(sub_CS$purity_mean - sub_CS$purity_sd, 
-                                      na.rm = T) * 20) / 20)
+             "purity_l" = floor(min(sub$purity_CS95 - sub$purity_CS95_sd, 
+                                    na.rm = T) * 20) / 20)
 }
 
-p_n_CS = ggplot(filter(data_CS, LD == lds[1]), aes(
-  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = nCSs / 200)) +
+p_n_CS = ggplot(filter(data, LD == lds[1]), aes(
+  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = n_CS95 / 200)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8, 
            position = position_dodge2()) +
-  geom_errorbar(aes(ymin = nCSs / 200 - nCSs_sd, ymax = nCSs / 200 + nCSs_sd),
+  geom_errorbar(aes(ymin = n_CS95 / 200 - n_CS95_sd, ymax = n_CS95 / 200 + n_CS95_sd),
                 width = 0.8, position = position_dodge2(), 
                 linewidth = 0.25, color = "black") +
   facet_grid(POP ~ scenario, scales = "free",
@@ -66,11 +67,11 @@ p_n_CS = ggplot(filter(data_CS, LD == lds[1]), aes(
   guides(fill = guide_legend(nrow = 2)) +
   labs(x = NULL, y = "Number of 95% CSs", fill = "")
 
-p_size_CS = ggplot(filter(data_CS, LD == lds[1]), aes(
-  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = size_mean)) +
+p_size_CS = ggplot(filter(data, LD == lds[1]), aes(
+  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = size_CS95)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8, 
            position = position_dodge2()) +
-  geom_errorbar(aes(ymin = size_mean - size_sd, ymax = size_mean + size_sd),
+  geom_errorbar(aes(ymin = size_CS95 - size_CS95_sd, ymax = size_CS95 + size_CS95_sd),
                 width = 0.8, position = position_dodge2(), 
                 linewidth = 0.25, color = "black") +
   facet_grid(POP ~ scenario, scales = "free",
@@ -83,11 +84,11 @@ p_size_CS = ggplot(filter(data_CS, LD == lds[1]), aes(
   guides(fill = guide_legend(nrow = 2)) +
   labs(x = NULL, y = "Size of 95% CSs", fill = "")
 
-p_purity_CS = ggplot(filter(data_CS, LD == lds[1]), aes(
-  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = purity_mean)) +
+p_purity_CS = ggplot(filter(data, LD == lds[1]), aes(
+  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = purity_CS95)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8, 
            position = position_dodge2()) +
-  geom_errorbar(aes(ymin = purity_mean - purity_sd, ymax = purity_mean + purity_sd),
+  geom_errorbar(aes(ymin = purity_CS95 - purity_CS95_sd, ymax = purity_CS95 + purity_CS95_sd),
                 width = 0.8, position = position_dodge2(), 
                 linewidth = 0.25, color = "black") +
   facet_grid(POP ~ scenario, scales = "free",
@@ -116,18 +117,18 @@ ggsave("size_purity_UKBB.pdf",
 
 ylimits = foreach(pop = pops, .combine = "rbind") %do%
 {
-  sub_CS = filter(data_CS, LD == lds[2] & POP == pop)
+  sub = filter(data, LD == lds[2] & POP == pop)
   
   data.frame("POP" = pop,
-             "purity_l" = floor(min(sub_CS$purity_mean - sub_CS$purity_sd, 
+             "purity_l" = floor(min(sub$purity_CS95 - sub$purity_CS95_sd, 
                                     na.rm = T) * 20) / 20)
 }
 
-p_n_CS = ggplot(filter(data_CS, LD == lds[2]), aes(
-  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = nCSs / 200)) +
+p_n_CS = ggplot(filter(data, LD == lds[2]), aes(
+  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = n_CS95 / 200)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8, 
            position = position_dodge2()) +
-  geom_errorbar(aes(ymin = nCSs / 200 - nCSs_sd, ymax = nCSs / 200 + nCSs_sd),
+  geom_errorbar(aes(ymin = n_CS95 / 200 - n_CS95_sd, ymax = n_CS95 / 200 + n_CS95_sd),
                 width = 0.8, position = position_dodge2(), 
                 linewidth = 0.25, color = "black") +
   facet_grid(POP ~ scenario, scales = "free",
@@ -140,11 +141,11 @@ p_n_CS = ggplot(filter(data_CS, LD == lds[2]), aes(
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Number of 95% CSs", fill = "")
 
-p_size_CS = ggplot(filter(data_CS, LD == lds[2]), aes(
-  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = size_mean)) +
+p_size_CS = ggplot(filter(data, LD == lds[2]), aes(
+  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = size_CS95)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8, 
            position = position_dodge2()) +
-  geom_errorbar(aes(ymin = size_mean - size_sd, ymax = size_mean + size_sd),
+  geom_errorbar(aes(ymin = size_CS95 - size_CS95_sd, ymax = size_CS95 + size_CS95_sd),
                 width = 0.8, position = position_dodge2(), 
                 linewidth = 0.25, color = "black") +
   facet_grid(POP ~ scenario, scales = "free",
@@ -157,11 +158,11 @@ p_size_CS = ggplot(filter(data_CS, LD == lds[2]), aes(
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Size of 95% CSs", fill = "")
 
-p_purity_CS = ggplot(filter(data_CS, LD == lds[2]), aes(
-  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = purity_mean)) +
+p_purity_CS = ggplot(filter(data, LD == lds[2]), aes(
+  x = factor(sprintf("%dk", N2/1e3), levels = c("20k","200k")), y = purity_CS95)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8, 
            position = position_dodge2()) +
-  geom_errorbar(aes(ymin = purity_mean - purity_sd, ymax = purity_mean + purity_sd),
+  geom_errorbar(aes(ymin = purity_CS95 - purity_CS95_sd, ymax = purity_CS95 + purity_CS95_sd),
                 width = 0.8, position = position_dodge2(), 
                 linewidth = 0.25, color = "black") +
   facet_grid(POP ~ scenario, scales = "free",
