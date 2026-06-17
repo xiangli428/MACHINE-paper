@@ -39,7 +39,8 @@ data = foreach(db = dbs, .combine = "rbind") %do%
     {
       output = data.frame("db" = db, "pheno" = pheno, "method" = method,
                           "EUR_AFR_EAS" = 0, "EUR_AFR" = 0, "EUR_EAS" = 0,
-                          "AFR_EAS" = 0, "EUR" = 0, "AFR" = 0, "EAS" = 0)
+                          "AFR_EAS" = 0, "EUR" = 0, "AFR" = 0, "EAS" = 0,
+                          "total" = 0, "total_size" = 0, "total_tag_size" = 0)
       
       CS_overlap = read.delim(sprintf("results/%s/%s/%s/CS_overlap.txt", 
                                       methods[method], pheno, db))
@@ -102,12 +103,18 @@ data = foreach(db = dbs, .combine = "rbind") %do%
 
             set = foreach(s = match(ids, CS_info$CS), .combine = "union") %do%
             {
-              c(strsplit(CS_info$CS.SNP[s], ',')[[1]],
-                strsplit(CS_info$CS.tags[s], ',')[[1]])
+              strsplit(CS_info$CS.SNP[s], ',')[[1]]
+            }
+            
+            tags = foreach(s = match(ids, CS_info$CS), .combine = "union") %do%
+            {
+              strsplit(CS_info$CS.tags[s], ',')[[1]]
             }
 
             tmp$union.size = length(set)
+            tmp$union.tags.size = length(set) + length(tags)
             tmp$union.SNP = paste(set, collapse = ',')
+            tmp$union.tags = paste(tags, collapse = ',')
             tmp
           }
         }
@@ -136,18 +143,60 @@ data = foreach(db = dbs, .combine = "rbind") %do%
                                      methods[method], pheno, db))
         for(pid in pids)
         {
-          output[,pid] = length(setdiff(grep(pid, CS_info$CS, value = T), 
-                                        CS_overlap[,sprintf("CS.%s",pid)]))
+          CS = setdiff(grep(pid, CS_info$CS, value = T), 
+                       CS_overlap[,sprintf("CS.%s",pid)])
+          output[,pid] = length(CS)
+          if(length(CS) > 0)
+          {
+            sub = CS_info[match(CS, CS_info$CS),]
+            tmp = data.frame("pheno" = pheno,
+                             "db" = db,
+                             "chromosome" = sub$chromosome,
+                             "block" = sub$block,
+                             "CS.EUR" = "",
+                             "CS.AFR" = "",
+                             "CS.EAS" = "",
+                             "union.size" = sub$CS.size,
+                             "union.tags.size" = sub$CS.size + 
+                               sapply(strsplit(sub$CS.tags, ","), length),
+                             "union.SNP" = sub$CS.SNP,
+                             "union.tags" = sub$CS.tags)
+            tmp[,sprintf("CS.%s",pid)] = sub$CS
+            CS_overlap_union %<>% rbind(tmp)
+          }
         }
       } else {
         for(pid in pids)
         {
           CS_info = read.delim(sprintf("results/%s/%s/%s/%s/CS_info.txt", 
                                        methods[method], pheno, db, pid))
-          output[,pid] = length(setdiff(CS_info$CS, 
-                                        CS_overlap[sprintf("CS.%s",pid)]))
+          CS_info$CS.tags[is.na(CS_info$CS.tags)] = ""
+          CS = setdiff(CS_info$CS, CS_overlap[,sprintf("CS.%s",pid)])
+          output[,pid] = length(CS)
+          if(length(CS) > 0)
+          {
+            sub = CS_info[match(CS, CS_info$CS),]
+            tmp = data.frame("pheno" = pheno,
+                             "db" = db,
+                             "chromosome" = sub$chromosome,
+                             "block" = sub$block,
+                             "CS.EUR" = "",
+                             "CS.AFR" = "",
+                             "CS.EAS" = "",
+                             "union.size" = sub$CS.size,
+                             "union.tags.size" = sub$CS.size + 
+                               sapply(strsplit(sub$CS.tags, ","), length),
+                             "union.SNP" = sub$CS.SNP,
+                             "union.tags" = sub$CS.tags)
+            tmp[,sprintf("CS.%s",pid)] = sub$CS
+            CS_overlap_union %<>% rbind(tmp)
+          }
         }
       }
+      CS_overlap_union %<>% arrange(chromosome, block)
+      write_delim(CS_overlap_union, sprintf(
+        "results/%s/%s/%s/CS_all.txt", methods[method], pheno, db),
+        delim = '\t')
       
       output
     }
@@ -159,8 +208,6 @@ data$pheno %<>% factor(levels = phenos)
 data$method %<>% factor(levels = names(methods))
 
 saveRDS(data, "CS_overlap_num.RData")
-
-data = readRDS("CS_overlap_num.RData")
 
 data %<>% gather(pops, nCSs, -db, -pheno, -method)
 data$pops %<>% gsub("_", " & ", .)
@@ -206,3 +253,13 @@ for(db in dbs)
           labs(x = NULL, y = "Number of CSs", fill = "", title = db))
 }
 dev.off()
+
+# print(ggplot(data[data$db == db,], aes(x = pops, y = nCSs)) +
+#         geom_bar(stat = "identity", color = "#3182BD", fill = "#3182BD", 
+#                  width = 0.8, position = position_dodge2()) +
+#         geom_text(aes(label = nCSs), size = 2, vjust = -0.5) +
+#         facet_grid(method ~ pheno, scales = "fixed") +
+#         theme_classic() + custom_theme() + panel_border() +
+#         scale_y_continuous(limits = c(0,2000), trans = log1p_trans(),
+#                            breaks = c(0,1,2,5,10,20,50,100,200,500,1000)) +
+#         labs(x = NULL, y = "Number of CSs", title = db))
