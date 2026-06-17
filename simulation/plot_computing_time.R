@@ -54,14 +54,7 @@ data = foreach(s = 1:3, .combine = "rbind") %do%
             results = read.delim(sprintf(
               "setting_%s/%s/N%d-%d/results.txt",
               s, ld_methods[[ld]][method], k, N2_seq[m]))
-            if(method == "MACHINE")
-            {
-              time = results$time / results$mcmc_n * 2500
-            } else if(method %in% c("SuSiEx","MultiSuSiE")) {
-              time = results$time * 96 / 10
-            } else {
-              time = results$time
-            }
+            time = results$time
           } else {
             results_1 = read.delim(sprintf(
               "setting_%s/%s/N1-200000/results.txt",
@@ -69,13 +62,7 @@ data = foreach(s = 1:3, .combine = "rbind") %do%
             results_2 = read.delim(sprintf(
               "setting_%s/%s/N%d-%d/results.txt",
               s, ld_methods[[ld]][method], k, N2_seq[m]))
-            if(method == "h2-D2")
-            {
-              time = results_1$time / results_1$mcmc_n * 2500 +
-                results_2$time / results_2$mcmc_n * 2500
-            } else {
-              time = results_1$time + results_2$time
-            }
+            time = results_1$time + results_2$time
           }
           
           data.frame("LD" = ld,
