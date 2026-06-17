@@ -11,55 +11,31 @@ library(mvtnorm)
 setwd("simulation/data")
 
 # gLDSC var
-pops = c("EUR" = 1, "EAS" = 5)
+pops = c("EUR" = 1, "AFR" = 4, "EAS" = 5)
 
 registerDoParallel(10)
 
 select_block = readRDS("select_block.RData")
 
-variant = foreach(block = select_block, .combine = "rbind") %dopar%
-{
-  variant_pop = foreach(pid = names(pops)) %do%
-  {
-    read.delim(gzfile(sprintf(
-      "%s/%s/%s/LD/chr%s/%s/variant_reblock.txt.gz",
-      "~/Documents/GWAS/data/UKBB", pops[pid], 
-      "imputed_genotype_unique_info-0.8_maf-0.001_hwe-1e-6", 
-      i, block)))
-  }
-
-  merge(variant_pop[[1]], variant_pop[[2]], sort = F)
-}
-variant = variant[,-c(1,5)]
+variant = readRDS("variant.RData")
 
 gLDSC_res = foreach(pid = names(pops)) %do%
 {
-  readRDS(sprintf("%s/gLDSC_result/%s/gldsc_res_pos.Rdata", 
-                  "../../real_data/scz2022", pid))
+  readRDS(sprintf("%s/gLDSC_results/HDL/UKBB/%s/gLDSC_res.RData", 
+                  "../../real_data/glgc", pid))
 }
 names(gLDSC_res) = names(pops)
 
-for(k in 1:2)
-{
-  names(gLDSC_res[[k]][[1]]) = rownames(gLDSC_res[[k]][[2]])
-}
-
 for(pid in names(pops))
 {
-  annos = rownames(gLDSC_res[[pid]][[2]])[-1]
-  variant[[sprintf("var.%s", pid)]] = foreach(
-    anno = annos, .combine = "+") %dopar%
-    {
-      bed = read_delim(sprintf(
-        "../../annotations/baseline_bed_intersect/%s/%s.bed",
-        pops[pid], anno), delim = '\t', col_names = F)
-      snps = intersect(variant$rsid, bed$X4)
-      s = rep(0, nrow(variant))
-      names(s) = variant$rsid
-      s[intersect(variant$rsid, bed$X4)] = 
-        gLDSC_res[[pid]]$Taus[anno]
-      s
-    } + gLDSC_res[[pid]]$Taus[1]
+  Amatrix = read_delim(sprintf(
+    "%s/baseline_bed_intersect/maf_g_input_53_%s/Amatrix.%s.annot", 
+    "../../annotations", pops[pid], 1), delim = '\t', show_col_types = F)
+  Amatrix = Amatrix[match(variant$rsid, Amatrix$SNP),]
+  
+  variant[[sprintf("var.%s", pid)]] = (as.matrix(Amatrix[,3:56]) %*% 
+                                         gLDSC_res[[pid]]$Taus)[,1] %>% 
+    pmax(max(.) / 20)
 }
 
 N1 = 2e5
@@ -76,20 +52,17 @@ for(s in 1:3)
   dir.create(sprintf("setting_%s", s), recursive = T)
 }
 
-foreach(block = select_block, .combine = "c") %dopar%
+foreach(blk = select_block, .combine = "c") %dopar%
 {
-  data = variant[variant$block == block,]
-  
-  R = readRDS(sprintf("LD/%d.RData", block))
-  
-  data %<>% filter(is.element(rsid, colnames(R[[1]])))
+  data = filter(variant, block == blk)
+  R = readRDS(sprintf("LD/%d/LD_UKBB.RData", blk))
   M = nrow(data)
   
-  probs = cbind(data$var.EUR, data$var.EAS)
+  probs = cbind(data$var.EUR, data$var.AFR + data$var.EAS)
   
   foreach(s = 1:3, .combine = "c") %do%
   {
-    set.seed(10*block + s)
+    set.seed(10*blk + s)
     
     data$causal_1 = F
     data$causal_2 = F
@@ -140,18 +113,26 @@ foreach(block = select_block, .combine = "c") %dopar%
     diag(LD) = 1
     data$z_1 = sqrt(N1) * (LD %*% data$beta_1)[,1] + 
       rmvnorm(1, sigma = LD)[1,]
-    data$z_1 = sqrt(N1 - 1) * data$z_1 / sqrt(N1 - data$z_1^2)
     
     LD = as.matrix(R[[2]])
     diag(LD) = 1
     noise = rmvnorm(2, sigma = LD)
     for(m in 1:2)
     {
-      z = sqrt(N2_seq[m]) * (LD %*% data$beta_2)[,1] + noise[m,]
-      z = sqrt(N2_seq[m] - 1) * z / sqrt(N2_seq[m] - z^2)
-      data[[sprintf("z_2.%d", N2_seq[m])]] = z
+      data[[sprintf("z_2.%d", N2_seq[m])]] = 
+        sqrt(N2_seq[m]) * (LD %*% data$beta_2)[,1] + noise[m,]
     }
     
-    saveRDS(data, file = sprintf("setting_%s/%d.RData", s, block))
+    LD = as.matrix(R[[3]])
+    diag(LD) = 1
+    noise = rmvnorm(2, sigma = LD)
+    for(m in 1:2)
+    {
+      data[[sprintf("z_3.%d", N2_seq[m])]] = 
+        sqrt(N2_seq[m]) * (LD %*% data$beta_2)[,1] + noise[m,]
+    }
+    
+    saveRDS(data, file = sprintf("setting_%s/%d.RData", s, blk))
+    NULL
   }
 }

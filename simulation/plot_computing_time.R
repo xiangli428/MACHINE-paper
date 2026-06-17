@@ -25,7 +25,7 @@ methods = c("MACHINE", "MESuSiE", "XMAP", "SuSiEx", "MultiSuSiE",
 
 ld_methods = list(
   "In-sample LD" = c(
-    "MACHINE" = "MACHINE",
+    "MACHINE" = "MACHINE-gLDSC",
     "MESuSiE" = "MESuSiE",
     "SuSiEx" = "SuSiEx",
     "XMAP" = "XMAP",
@@ -34,40 +34,59 @@ ld_methods = list(
     "SuSiE" = "SuSiE",
     "CARMA" = "CARMA"),
   "1kG LD" = c(
-    "MACHINE" = "MACHINE_1kg",
-    "h2-D2" = "h2D2_1kg",
+    "MACHINE" = "MACHINE_1kg-gLDSC",
+    "h2-D2" = "h2D2_1kg-gLDSC",
     "RSparsePro" = "RSparsePro_1kg",
     "CARMA" = "CARMA_1kg"))
 
 data = foreach(s = 1:3, .combine = "rbind") %do%
 {
-  foreach(m = 1:2, .combine = "rbind") %do%
+  foreach(k = 2:3, .combine = "rbind") %do%
   {
-    foreach(ld = lds, .combine = "rbind") %do%
+    foreach(m = 1:2, .combine = "rbind") %do%
     {
-      foreach(method = names(ld_methods[[ld]]), .combine = "rbind") %do%
+      foreach(ld = lds, .combine = "rbind") %do%
       {
-        if(method %in% methods[1:5])
+        foreach(method = names(ld_methods[[ld]]), .combine = "rbind") %do%
         {
-          results = read.delim(sprintf(
-            "setting_%s/%s/results_N2-%d.txt",
-            s, ld_methods[[ld]][method], N2_seq[m]))
-        } else {
-          results_1 = read.delim(sprintf(
-            "setting_%s/%s/results_N1-200000.txt",
-            s, ld_methods[[ld]][method]))
-          results_2 = read.delim(sprintf(
-            "setting_%s/%s/results_N2-%d.txt",
-            s, ld_methods[[ld]][method], N2_seq[m]))
+          if(method %in% methods[1:5])
+          {
+            results = read.delim(sprintf(
+              "setting_%s/%s/N%d-%d/results.txt",
+              s, ld_methods[[ld]][method], k, N2_seq[m]))
+            if(method == "MACHINE")
+            {
+              time = results$time / results$mcmc_n * 2500
+            } else if(method %in% c("SuSiEx","MultiSuSiE")) {
+              time = results$time * 96 / 10
+            } else {
+              time = results$time
+            }
+          } else {
+            results_1 = read.delim(sprintf(
+              "setting_%s/%s/N1-200000/results.txt",
+              s, ld_methods[[ld]][method]))
+            results_2 = read.delim(sprintf(
+              "setting_%s/%s/N%d-%d/results.txt",
+              s, ld_methods[[ld]][method], k, N2_seq[m]))
+            if(method == "h2-D2")
+            {
+              time = results_1$time / results_1$mcmc_n * 2500 +
+                results_2$time / results_2$mcmc_n * 2500
+            } else {
+              time = results_1$time + results_2$time
+            }
+          }
+          
+          data.frame("LD" = ld,
+                     "scenario" = s,
+                     "pops" = sprintf("EUR+%s", pids[k]),
+                     "N2" = N2_seq[m],
+                     "method" = method,
+                     "block" = select_block_info$block,
+                     "num_variants" = select_block_info$num_variants,
+                     "time" = time)
         }
-        
-        data.frame("LD" = ld,
-                   "scenario" = s,
-                   "N2" = N2_seq[m],
-                   "method" = method,
-                   "block" = select_block_info$block,
-                   "num_variants" = select_block_info$num_variants,
-                   "time" = time)
       }
     }
   }
@@ -77,17 +96,19 @@ data$LD %<>% factor(levels = lds)
 data$method %<>% factor(levels = methods)
 
 saveRDS(data, "computing_time.RData")
-data = readRDS("computing_time.RData")
 
-data_mean = group_by(data, LD, method, block, num_variants) %>% 
+blocks = select_block_info$block[sort(order(select_block_info$num_variants)[51:200])]
+
+data_mean = filter(data, block %in% blocks) %>% 
+  group_by(LD, method, block, num_variants) %>% 
   summarise(time_mean = mean(time))
 
 model_info = foreach(ld = lds, .combine = "rbind") %do%
 {
   foreach(med = names(ld_methods[[ld]]), .combine = "rbind") %do%
   {
-    data_sub = filter(data_mean, LD == ld & method == med)
-    mod = summary(lm(log10(time_mean) ~ log10(num_variants), data = data_sub))
+    mod = summary(lm(log10(time) ~ log10(num_variants), 
+                     data = filter(data, LD == ld & method == med & block %in% blocks)))
     data.frame("LD" = ld,
                "method" = med,
                "intercept" = mod$coefficients[1,1],
@@ -101,9 +122,7 @@ model_info = foreach(ld = lds, .combine = "rbind") %do%
 model_info$LD %<>% factor(levels = lds)
 model_info$method %<>% factor(levels = methods)
 
-write_delim(model_info, "computing_time_model_info.txt", delim = '\t')
 saveRDS(model_info, "computing_time_model_info.RData")
-model_info = readRDS("computing_time_model_info.RData")
 
 custom_theme = function()
 {
@@ -125,12 +144,15 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+
 model_info %<>% mutate(label = if_else(intercept > 0, sprintf(
   "y==%.2f*x+%.2f~~R^2==%.2f", slope, intercept, adj.r.squared), sprintf(
     "y==%.2f*x%.2f~~R^2==%.2f", slope, intercept, adj.r.squared)))
-model_info$x = 3.05
-model_info$y = 0.5
-model_info$y[is.element(model_info$method, c("MESuSiE", "XMAP", "MultiSuSiE", "SuSiE"))] = 3
+model_info$x = 3.08
+model_info$y = 0.75
+model_info$y[is.element(model_info$method, c(
+  "MESuSiE", "XMAP", "SuSiE"))] = 2.75
+
 
 p1 = ggplot(filter(data_mean, LD == lds[1] & is.element(method, names(
   ld_methods[[1]])[1:4])), aes(x = log10(num_variants), y = log10(time_mean))) +
@@ -140,7 +162,7 @@ p1 = ggplot(filter(data_mean, LD == lds[1] & is.element(method, names(
     color = "black", parse = T) +
   facet_grid(. ~ method, scales = "free") +
   theme_classic() + custom_theme() +
-  scale_y_continuous(limits = c(-0.5,4)) +
+  scale_y_continuous(limits = c(0,3.6)) +
   scale_color_manual(values = hue_pal()(13)[c(3:6)]) +
   guides(color = "none") +
   labs(x = NULL, y = NULL)
@@ -153,7 +175,7 @@ p2 = ggplot(filter(data_mean, LD == lds[1] & is.element(method, names(
     color = "black", parse = T) +
   facet_grid(. ~ method, scales = "free") +
   theme_classic() + custom_theme() +
-  scale_y_continuous(limits = c(-0.5,4)) +
+  scale_y_continuous(limits = c(0,3.6)) +
   scale_color_manual(values = hue_pal()(13)[c(7,10,11,13)]) +
   guides(color = "none") +
   labs(x = NULL, y = NULL)
@@ -166,7 +188,7 @@ p3 = ggplot(filter(data_mean, LD == lds[2] & is.element(method, names(
     color = "black", parse = T) +
   facet_grid(. ~ method, scales = "free") +
   theme_classic() + custom_theme() +
-  scale_y_continuous(limits = c(-0.5,4)) +
+  scale_y_continuous(limits = c(0,3.6)) +
   scale_color_manual(values = hue_pal()(13)[c(3,10,12,13)]) +
   guides(color = "none") +
   labs(x = NULL, y = NULL)

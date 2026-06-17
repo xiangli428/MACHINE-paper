@@ -5,6 +5,9 @@ N2_label = c("20k", "200k")
 scenarios = c("1" = "5 shared causal variants", 
               "2" = "3 shared causal variants",
               "3" = "1 shared causal variant")
+scenarios2 = c("1" = "5 causal variants", 
+               "2" = "4 causal variants",
+               "3" = "3 causal variants")
 lds = c("In-sample LD", "1kG LD")
 
 methods = c("MACHINE + g-LDSC", "MACHINE + PolyFun", "MACHINE",
@@ -36,9 +39,9 @@ ld_methods = list(
     "RSparsePro" = "RSparsePro_1kg",
     "CARMA" = "CARMA_1kg"))
 
-pops = c("cross" = "Cross", "pop1" = "EUR", "pop2" = "EAS", "shared" = "Shared")
+pids = c("EUR", "AFR", "EAS")
+tasks = list(c("cross" = "Cross", "pop1" = "EUR", "pop2" = "AFR", "shared" = "Shared"),
+             c("cross" = "Cross", "pop1" = "EUR", "pop2" = "EAS", "shared" = "Shared"))
 
-n_causal = data.frame("Cross" = c(5,5,5), 
-                      "EUR" = c(5,4,3), 
-                      "EAS" = c(5,4,3),
-                      "Shared" = c(5,3,1))
+n_causal = data.frame("cross" = c(5,5,5), "pop1" = c(5,4,3), "pop2" = c(5,4,3),
+                      "shared" = c(5,3,1))
