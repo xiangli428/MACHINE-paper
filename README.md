@@ -16,13 +16,13 @@ This directory contains scripts for generating LD matrices, simulating summary s
 
 ### **1. LD matrix generation**
 
-- **simulation_data_LD.R**
+- **simulation_LD.R**
 
-    Select 200 LD blocks and generate LD matrices for EUR and EAS populations from UK BioBank (UKBB) genotype data.
+    Select 200 LD blocks and generate LD matrices for EUR, AFR, and EAS populations from UK BioBank (UKBB) genotype data.
 
-- **simulation_data_LD_1kg.R**
+- **simulation_LD_1kg.sh, simulation_LD_1kg.R**
 
-    Compute LD matrices for EUR and EAS populations using 1000 Genomes (1kG) genotype data.
+    Compute LD matrices and their eigen decompositions for EUR, AFR, and EAS populations using 1000 Genomes (1kG) genotype data.
 
 
 ### **2. Simulated summary statistics**
@@ -34,23 +34,23 @@ This directory contains scripts for generating LD matrices, simulating summary s
 
 ### **3. Functional annotation integration**
 
-- **do_gLDSC.R**
+- **gLDSC/do_gLDSC.R**
 
     Run g-LDSC for each simulation setting.
 
-- **gLDSC_var.R**
+- **gLDSC/gLDSC_var.R**
 
     Output per-variant heritability estimated by g-LDSC.
 
-- **polyfun_input.R**
+- **polyfun/polyfun_input.R**
 
     Prepares input data for PolyFun.
 
-- **do_polyfun.sh**
+- **polyfun/do_polyfun.sh**
 
     Execute PolyFun for each simulation setting (under polyfun environment).
 
-- **polyfun_var.R**
+- **polyfun/polyfun_var.R**
 
     Output per-variant heritability estimated by PolyFun.
 
