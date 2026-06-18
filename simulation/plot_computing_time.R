@@ -84,10 +84,7 @@ data$method %<>% factor(levels = methods)
 
 saveRDS(data, "computing_time.RData")
 
-blocks = select_block_info$block[sort(order(select_block_info$num_variants)[51:200])]
-
-data_mean = filter(data, block %in% blocks) %>% 
-  group_by(LD, method, block, num_variants) %>% 
+data_mean = data %>% group_by(LD, method, block, num_variants) %>% 
   summarise(time_mean = mean(time))
 
 model_info = foreach(ld = lds, .combine = "rbind") %do%
