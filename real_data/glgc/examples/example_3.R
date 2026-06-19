@@ -15,7 +15,6 @@ library(ggh4x)
 library(gggenes)
 library(latex2exp)
 library(scales)
-library(Hmisc)
 
 setwd("real_data/glgc")
 

@@ -14,7 +14,6 @@ library(ggpubr)
 library(ggh4x)
 library(latex2exp)
 library(scales)
-library(Hmisc)
 
 setwd("simulation/results")
 
@@ -55,14 +54,13 @@ names(freq) = c("EUR_UKBB","AFR_UKBB","EAS_UKBB","EUR_1kG","AFR_1kG","EAS_1kG")
 freq$r = seq(from = 0.005, to = 0.995, by = 0.01)
 freq = freq[,c(7,1:6)]
 
-saveRDS(freq, "LD_distribution.RData")
-
 freq %<>% gather(pid_LD, density, -r) %>% 
   separate(pid_LD, into = c("pid", "LD"), sep = '_') %>%
   mutate(density = density / 121698792 / 0.01)
 freq$pid %<>% factor(levels = c("EUR","AFR","EAS"))
 freq$LD %<>% factor(levels = c("UKBB","1kG"))
 
+saveRDS(freq, "LD_distribution.RData")
 
 rr = foreach(k = 1:200, .combine = "+") %dopar%
 {

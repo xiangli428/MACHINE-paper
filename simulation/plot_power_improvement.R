@@ -11,7 +11,6 @@ library(ggpubr)
 library(ggpattern)
 library(latex2exp)
 library(scales)
-library(Hmisc)
 
 setwd("simulation/results")
 

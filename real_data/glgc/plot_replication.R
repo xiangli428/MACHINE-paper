@@ -13,7 +13,6 @@ library(ggh4x)
 library(RColorBrewer)
 library(latex2exp)
 library(scales)
-library(Hmisc)
 
 setwd("real_data/glgc")
 

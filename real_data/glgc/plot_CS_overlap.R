@@ -13,7 +13,6 @@ library(ggpubr)
 library(ggh4x)
 library(latex2exp)
 library(scales)
-library(Hmisc)
 library(igraph)
 
 setwd("real_data/glgc")
@@ -253,13 +252,3 @@ for(db in dbs)
           labs(x = NULL, y = "Number of CSs", fill = "", title = db))
 }
 dev.off()
-
-# print(ggplot(data[data$db == db,], aes(x = pops, y = nCSs)) +
-#         geom_bar(stat = "identity", color = "#3182BD", fill = "#3182BD", 
-#                  width = 0.8, position = position_dodge2()) +
-#         geom_text(aes(label = nCSs), size = 2, vjust = -0.5) +
-#         facet_grid(method ~ pheno, scales = "fixed") +
-#         theme_classic() + custom_theme() + panel_border() +
-#         scale_y_continuous(limits = c(0,2000), trans = log1p_trans(),
-#                            breaks = c(0,1,2,5,10,20,50,100,200,500,1000)) +
-#         labs(x = NULL, y = "Number of CSs", title = db))
