@@ -84,6 +84,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 calibration_table$N2 = factor(sprintf("N^{(2)}==%d*k", calibration_table$N2 / 1e3),
                               levels = sprintf("N^{(2)}==%d*k", N2_seq / 1e3))
 
@@ -111,7 +116,7 @@ ggplot(filter(data, pops == "EUR+AFR"), aes(x = group, y = Prop, color = method)
                labeller(scenario = scenarios, N2 = label_parsed)) +
   theme_classic() + custom_theme() + 
   scale_y_continuous(limits = c(0,1)) +
-  scale_color_manual(values = hue_pal()(13)[c(1:11,13)]) +
+  scale_color_manual(values = colors[c(1:11,13)]) +
   guides(color = guide_legend(nrow = 2)) +
   labs(x = "CL or PIP bins", y = "Proportion of causal variants", colour = "")
 
@@ -126,7 +131,7 @@ ggplot(filter(data, pops == "EUR+EAS"), aes(x = group, y = Prop, color = method)
                labeller(scenario = scenarios, N2 = label_parsed)) +
   theme_classic() + custom_theme() + 
   scale_y_continuous(limits = c(0,1)) +
-  scale_color_manual(values = hue_pal()(13)[c(1:11,13)]) +
+  scale_color_manual(values = colors[c(1:11,13)]) +
   guides(color = guide_legend(nrow = 2)) +
   labs(x = "CL or PIP bins", y = "Proportion of causal variants", colour = "")
 
@@ -153,7 +158,7 @@ ggplot(filter(data, pops == "EUR+AFR"), aes(x = group, y = Prop, color = method)
                labeller(scenario = scenarios, N2 = label_parsed)) +
   theme_classic() + custom_theme() + 
   scale_y_continuous(limits = c(0,1)) +
-  scale_color_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+  scale_color_manual(values = colors[c(1:3,8:10,12,13)]) +
   guides(color = guide_legend(nrow = 2)) +
   labs(x = "CL or PIP bins", y = "Proportion of causal variants", colour = "")
 
@@ -168,7 +173,7 @@ ggplot(filter(data, pops == "EUR+EAS"), aes(x = group, y = Prop, color = method)
                labeller(scenario = scenarios, N2 = label_parsed)) +
   theme_classic() + custom_theme() + 
   scale_y_continuous(limits = c(0,1)) +
-  scale_color_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+  scale_color_manual(values = colors[c(1:3,8:10,12,13)]) +
   guides(color = guide_legend(nrow = 2)) +
   labs(x = "CL or PIP bins", y = "Proportion of causal variants", colour = "")
 

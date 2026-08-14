@@ -133,6 +133,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 data$task2 = as.character(data$task)
 data$task2[data$task %in% c("AFR","EAS")] = "AFR / EAS"
 data$task2 %<>% factor(levels = c("Cross","EUR","AFR / EAS","Shared"))
@@ -167,7 +172,7 @@ for(s in 1:3)
             scale_y_continuous(limits = c(ylimits[6,3], ylimits[6,4])),
             scale_y_continuous(limits = c(ylimits[7,3], ylimits[7,4])),
             scale_y_continuous(limits = c(ylimits[8,3], ylimits[8,4])))) +
-          scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+          scale_fill_manual(values = colors[c(1:11,13)]) +
           guides(fill = guide_legend(nrow = 2)) +
           geom_hline(yintercept = 0.95, linetype = "dashed", color = "grey", 
                      linewidth = 0.25) +
@@ -207,7 +212,7 @@ for(s in 1:3)
             scale_y_continuous(limits = c(ylimits[6,3], ylimits[6,4])),
             scale_y_continuous(limits = c(ylimits[7,3], ylimits[7,4])),
             scale_y_continuous(limits = c(ylimits[8,3], ylimits[8,4])))) +
-          scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+          scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
           guides(fill = guide_legend(nrow = 1)) +
           geom_hline(yintercept = 0.95, linetype = "dashed", color = "grey", 
                      linewidth = 0.25) +

@@ -135,6 +135,18 @@ data$pheno %<>% factor(levels = phenos)
 data$db %<>% factor(levels = dbs)
 data$method %<>% factor(levels = names(methods))
 
+data %<>% mutate(
+  prop_variants_0.9_coding = num_variants_0.9_coding / num_variants_0.9,
+  prop_variants_0.9_coding_sd = sqrt(prop_variants_0.9_coding * (
+    1-prop_variants_0.9_coding) / num_variants_0.9),
+  prop_CS95_coding = num_CS95_coding / num_CS95,
+  prop_CS95_coding_sd = sqrt(prop_CS95_coding * (1-prop_CS95_coding) / num_CS95),
+  prop_variants_0.9_eQTL = num_variants_0.9_eQTL / num_variants_0.9,
+  prop_variants_0.9_eQTL_sd = sqrt(prop_variants_0.9_eQTL * (
+    1-prop_variants_0.9_eQTL) / num_variants_0.9),
+  prop_CS95_eQTL = num_CS95_eQTL / num_CS95,
+  prop_CS95_eQTL_sd = sqrt(prop_CS95_eQTL * (1-prop_CS95_eQTL) / num_CS95))
+
 saveRDS(data, "eQTL_enrichment.RData")
 
 data_RFR = readRDS("RFR.RData")
@@ -160,13 +172,18 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 
 p1 = ggplot(data, aes(x = method, y = num_CS95)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8,
            position = position_dodge2()) +
   facet_grid(db ~ pheno, scales = "free_y") +
   theme_classic() + custom_theme() + 
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = "none") +
   labs(x = NULL, y = "Number of 95% CSs", title = NULL)
 
@@ -179,7 +196,7 @@ p2 = ggplot(data, aes(x = method, y = CS95_size_mean)) +
                 linewidth = 0.25, color = "black") +
   facet_grid(db ~ pheno, scales = "free_y") +
   theme_classic() + custom_theme() + 
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = "none") +
   labs(x = NULL, y = "Mean size of 95% CSs", title = NULL)
 
@@ -192,7 +209,7 @@ p3 = ggplot(data_RFR, aes(x = method, y = RFR_0.9)) +
   facet_grid(pid ~ pheno) +
   theme_classic() + custom_theme() + 
   scale_y_continuous(limits = c(0,1)) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = "none") +
   labs(x = NULL, y = "RFR", fill = "", title = TeX("CL or PIP $\\geq 0.9$"))
 
@@ -205,43 +222,59 @@ p4 = ggplot(data_RFR, aes(x = method, y = RFR_CS95)) +
   facet_grid(pid ~ pheno) +
   theme_classic() + custom_theme() + 
   scale_y_continuous(limits = c(0,1)) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = "none") +
   labs(x = NULL, y = "RFR", fill = "", title = "95% CS")
 
-p5 = ggplot(data, aes(x = method, y = num_variants_0.9_coding / num_variants_0.9)) +
+p5 = ggplot(data, aes(x = method, y = prop_variants_0.9_coding)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8,
            position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_variants_0.9_coding - prop_variants_0.9_coding_sd, 
+                    ymax = prop_variants_0.9_coding + prop_variants_0.9_coding_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   facet_grid(db ~ pheno, scales = "free_y") +
   theme_classic() + custom_theme() + 
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = TeX("CL or PIP $\\geq 0.9$"))
 
-p6 = ggplot(data, aes(x = method, y = num_CS95_coding / num_CS95)) +
+p6 = ggplot(data, aes(x = method, y = prop_CS95_coding)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8,
            position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_CS95_coding - prop_CS95_coding_sd, 
+                    ymax = prop_CS95_coding + prop_CS95_coding_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   facet_grid(db ~ pheno, scales = "free_y") +
   theme_classic() + custom_theme() + 
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = "95% CS")
 
-p7 = ggplot(data, aes(x = method, y = num_variants_0.9_eQTL / num_variants_0.9)) +
+p7 = ggplot(data, aes(x = method, y = prop_variants_0.9_eQTL)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8,
            position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_variants_0.9_eQTL - prop_variants_0.9_eQTL_sd, 
+                    ymax = prop_variants_0.9_eQTL + prop_variants_0.9_eQTL_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   facet_grid(db ~ pheno, scales = "free_y") +
   theme_classic() + custom_theme() + 
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = TeX("CL or PIP $\\geq 0.9$"))
 
 p8 = ggplot(data, aes(x = method, y = num_CS95_eQTL / num_CS95)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8,
            position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_CS95_eQTL - prop_CS95_eQTL_sd, 
+                    ymax = prop_CS95_eQTL + prop_CS95_eQTL_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   facet_grid(db ~ pheno, scales = "free_y") +
   theme_classic() + custom_theme() + 
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = "95% CS")
 

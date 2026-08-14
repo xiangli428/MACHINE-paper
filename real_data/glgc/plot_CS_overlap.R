@@ -237,6 +237,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 pdf("CS_overlap_num.pdf", width = 9, height = 9.93, onefile = T, bg = "white")
 for(db in dbs)
 {
@@ -247,7 +252,7 @@ for(db in dbs)
           facet_grid(pops ~ pheno, scales = "free_y") +
           theme_classic() + custom_theme() +
           scale_y_continuous(expand = expansion(mult = c(0,0.098))) +
-          scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+          scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
           guides(fill = guide_legend(nrow = 1)) +
           labs(x = NULL, y = "Number of CSs", fill = "", title = db))
 }

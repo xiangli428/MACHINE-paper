@@ -42,6 +42,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 p_list = list()
 
 tmp = filter(data, method %in% methods[1:7] &
@@ -68,7 +73,7 @@ for(k in 1:2)
       scenario = label_wrap_gen(width = 16), N2 = label_parsed)) +
     theme_classic() + custom_theme() +
     scale_y_continuous(limits = c(0,0.45)) +
-    scale_fill_manual(values = hue_pal()(13)[1:7], limits = methods[1:7],
+    scale_fill_manual(values = colors[1:7], limits = methods[1:7],
                       drop = F) +
     scale_pattern_manual(values = c("circle", "stripe")) +
     guides(fill = guide_legend(nrow = 2, override.aes = list(pattern = "none"),
@@ -89,7 +94,7 @@ for(k in 1:2)
       scenario = label_wrap_gen(width = 16), N2 = label_parsed)) +
     theme_classic() + custom_theme() +
     scale_y_continuous(limits = c(0,12)) +
-    scale_fill_manual(values = hue_pal()(13)[1:7], limits = methods[1:7],
+    scale_fill_manual(values = colors[1:7], limits = methods[1:7],
                       drop = F) +
     scale_pattern_manual(values = c("circle", "stripe")) +
     guides(fill = guide_legend(nrow = 2, override.aes = list(pattern = "none"),
@@ -110,7 +115,7 @@ for(k in 1:2)
       scenario = label_wrap_gen(width = 16), N2 = label_parsed)) +
     theme_classic() + custom_theme() +
     scale_y_continuous(limits = c(0,0.7)) +
-    scale_fill_manual(values = hue_pal()(13)[1:7], limits = methods[1:7],
+    scale_fill_manual(values = colors[1:7], limits = methods[1:7],
                       drop = F) +
     scale_pattern_manual(values = c("circle", "stripe")) +
     guides(fill = guide_legend(nrow = 2, override.aes = list(pattern = "none"),

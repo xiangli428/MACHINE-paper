@@ -127,6 +127,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 
 model_info %<>% mutate(label = if_else(intercept > 0, sprintf(
   "y==%.2f*x+%.2f~~R^2==%.2f", slope, intercept, adj.r.squared), sprintf(
@@ -146,7 +151,7 @@ p1 = ggplot(filter(data_mean, LD == lds[1] & is.element(method, names(
   facet_grid(. ~ method, scales = "free") +
   theme_classic() + custom_theme() +
   scale_y_continuous(limits = c(0,3.6)) +
-  scale_color_manual(values = hue_pal()(13)[c(3:6)]) +
+  scale_color_manual(values = colors[c(3:6)]) +
   guides(color = "none") +
   labs(x = NULL, y = NULL)
 
@@ -159,7 +164,7 @@ p2 = ggplot(filter(data_mean, LD == lds[1] & is.element(method, names(
   facet_grid(. ~ method, scales = "free") +
   theme_classic() + custom_theme() +
   scale_y_continuous(limits = c(0,3.6)) +
-  scale_color_manual(values = hue_pal()(13)[c(7,10,11,13)]) +
+  scale_color_manual(values = colors[c(7,10,11,13)]) +
   guides(color = "none") +
   labs(x = NULL, y = NULL)
 
@@ -172,7 +177,7 @@ p3 = ggplot(filter(data_mean, LD == lds[2] & is.element(method, names(
   facet_grid(. ~ method, scales = "free") +
   theme_classic() + custom_theme() +
   scale_y_continuous(limits = c(0,3.6)) +
-  scale_color_manual(values = hue_pal()(13)[c(3,10,12,13)]) +
+  scale_color_manual(values = colors[c(3,10,12,13)]) +
   guides(color = "none") +
   labs(x = NULL, y = NULL)
 

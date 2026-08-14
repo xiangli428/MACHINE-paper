@@ -119,6 +119,18 @@ data = foreach(method = names(methods), .combine = "rbind") %dopar%
 
 data$method %<>% factor(levels = names(methods))
 
+data %<>% mutate(
+  prop_variants_0.5_coding = num_variants_0.5_coding / num_variants_0.5,
+  prop_variants_0.5_coding_sd = sqrt(prop_variants_0.5_coding * (
+    1-prop_variants_0.5_coding) / num_variants_0.5),
+  prop_CS95_coding = num_CS95_coding / num_CS95,
+  prop_CS95_coding_sd = sqrt(prop_CS95_coding * (1-prop_CS95_coding) / num_CS95),
+  prop_variants_0.5_eQTL = num_variants_0.5_eQTL / num_variants_0.5,
+  prop_variants_0.5_eQTL_sd = sqrt(prop_variants_0.5_eQTL * (
+    1-prop_variants_0.5_eQTL) / num_variants_0.5),
+  prop_CS95_eQTL = num_CS95_eQTL / num_CS95,
+  prop_CS95_eQTL_sd = sqrt(prop_CS95_eQTL * (1-prop_CS95_eQTL) / num_CS95))
+
 saveRDS(data, "eQTL_enrichment.RData")
 
 CS_overlap_num = readRDS("CS_overlap_num.RData")
@@ -152,16 +164,21 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 p1 = ggplot(CS_overlap_num, aes(x = method, y = nCSs)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8,
            position = position_dodge2()) +
   geom_text(aes(label = nCSs), size = 2, vjust = -0.3) +
   facet_grid(pops ~ ., scales = "free_y") +
   theme_classic() + custom_theme() +
-  theme(plot.background = element_rect(color = "black", linetype = "dashed",
-                                       linewidth = 0.5)) +
+  theme(plot.background = element_rect(color = "black", linetype = "solid",
+                                       linewidth = 1)) +
   scale_y_continuous(expand = expansion(mult = c(0.05,0.15))) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Number of CSs", fill = "", title = NULL)
 
@@ -174,46 +191,58 @@ p2 = ggplot(CS_size, aes(x = method, y = CS95_size_mean)) +
                 linewidth = 0.25, color = "black") +
   facet_grid(. ~ pid, scales = "free_y") +
   theme_classic() + custom_theme() +
-  theme(plot.background = element_rect(color = "black", linetype = "dashed",
-                                       linewidth = 0.5)) +
+  theme(plot.background = element_rect(color = "black", linetype = "solid",
+                                       linewidth = 1)) +
   scale_y_continuous(expand = expansion(mult = c(0.05,0.15))) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Mean size of 95% CSs", fill = "", title = NULL)
 
-p3 = ggplot(data, aes(
-  x = method, y = num_variants_0.5_coding / num_variants_0.5, fill = method)) +
-  geom_bar(stat = "identity") +
+p3 = ggplot(data, aes(x = method, y = prop_variants_0.5_coding, fill = method)) +
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_variants_0.5_coding - prop_variants_0.5_coding_sd, 
+                    ymax = prop_variants_0.5_coding + prop_variants_0.5_coding_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   theme_classic() + custom_theme() + 
   scale_y_continuous(expand = expansion(mult = 0.05)) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = TeX("CL or PIP $\\geq 0.5$"))
 
-p4 = ggplot(data, aes(
-  x = method, y = num_CS95_coding / num_CS95, fill = method)) +
-  geom_bar(stat = "identity") +
+p4 = ggplot(data, aes(x = method, y = prop_CS95_coding, fill = method)) +
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_CS95_coding - prop_CS95_coding_sd, 
+                    ymax = prop_CS95_coding + prop_CS95_coding_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   theme_classic() + custom_theme() + 
   scale_y_continuous(expand = expansion(mult = 0.05)) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = "95% CS")
 
-p5 = ggplot(data, aes(x = method, y = num_variants_0.5_eQTL / num_variants_0.5)) +
-  geom_bar(aes(fill = method), stat = "identity", width = 0.8,
-           position = position_dodge2()) +
+p5 = ggplot(data, aes(x = method, y = prop_variants_0.5_eQTL, fill = method)) +
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_variants_0.5_eQTL - prop_variants_0.5_eQTL_sd, 
+                    ymax = prop_variants_0.5_eQTL + prop_variants_0.5_eQTL_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   theme_classic() + custom_theme() + 
   scale_y_continuous(expand = expansion(mult = 0.05)) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = TeX("CL or PIP $\\geq 0.5$"))
 
-p6 = ggplot(data, aes(x = method, y = num_CS95_eQTL / num_CS95)) +
-  geom_bar(aes(fill = method), stat = "identity", width = 0.8,
-           position = position_dodge2()) +
+p6 = ggplot(data, aes(x = method, y = prop_CS95_eQTL, fill = method)) +
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge2()) +
+  geom_errorbar(aes(ymin = prop_CS95_eQTL - prop_CS95_eQTL_sd, 
+                    ymax = prop_CS95_eQTL + prop_CS95_eQTL_sd),
+                width = 0.8, position = position_dodge2(),
+                linewidth = 0.25, color = "black") +
   theme_classic() + custom_theme() + 
   scale_y_continuous(expand = expansion(mult = 0.05)) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = NULL, y = "Proportion", title = "95% CS")
 

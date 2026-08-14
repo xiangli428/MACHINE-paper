@@ -154,6 +154,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 p = ggplot(data, aes(x = method, y = RFR)) +
   geom_bar(aes(fill = method), stat = "identity", width = 0.8,
            position = position_dodge2()) +
@@ -163,7 +168,7 @@ p = ggplot(data, aes(x = method, y = RFR)) +
   facet_grid(pops ~ pheno) +
   theme_classic() + custom_theme() +
   scale_y_continuous(limits = c(0,1)) +
-  scale_fill_manual(values = hue_pal()(13)[c(1,3,4,8,10:13)]) +
+  scale_fill_manual(values = colors[c(1,3,4,8,10:13)]) +
   guides(fill = guide_legend(nrow = 2)) +
   labs(x = NULL, y = "RFR (95% CS)", fill = "")
 

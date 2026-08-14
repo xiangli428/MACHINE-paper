@@ -178,6 +178,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 # UKBB LD
 plots = list()
 for(k in 2:3)
@@ -194,7 +199,8 @@ for(k in 2:3)
               coverage_u = ceiling(max(coverage_CS95 + coverage_CS95_sd, 
                                        na.rm = T) * 20) / 20,
               powerCS_l = floor(min(power_CS95 - power_CS95_sd, na.rm = T) * 20) / 20,
-              powerCS_u = ceiling(max(power_CS95 + power_CS95_sd, na.rm = T) * 20) / 20)
+              powerCS_u = ceiling(max(power_CS95 + power_CS95_sd, na.rm = T) * 20) / 20) %>%
+    as.data.frame()
   
   p_FDR_0.9 = ggplot(filter(data, LD == lds[1] & pops == Pops), aes(
     x = factor(sprintf("%dk", N2/1e3), levels = N2_label), y = FDR_0.9)) +
@@ -214,7 +220,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,2], ylimits[2,3])),
       scale_y_continuous(limits = c(ylimits[3,2], ylimits[3,3])),
       scale_y_continuous(limits = c(ylimits[4,2], ylimits[4,3])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+    scale_fill_manual(values = colors[c(1:11,13)]) +
     guides(fill = guide_legend(nrow = 2)) +
     geom_hline(yintercept = 0.1, linetype = "dashed", color = "grey", 
                linewidth = 0.25) +
@@ -239,7 +245,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,4], ylimits[2,5])),
       scale_y_continuous(limits = c(ylimits[3,4], ylimits[3,5])),
       scale_y_continuous(limits = c(ylimits[4,4], ylimits[4,5])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+    scale_fill_manual(values = colors[c(1:11,13)]) +
     guides(fill = guide_legend(nrow = 2)) +
     labs(x = NULL, y = TeX("Power at CL or PIP \\geq 0.9"), fill = "")
   
@@ -262,7 +268,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,6], ylimits[2,7])),
       scale_y_continuous(limits = c(ylimits[3,6], ylimits[3,7])),
       scale_y_continuous(limits = c(ylimits[4,6], ylimits[4,7])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+    scale_fill_manual(values = colors[c(1:11,13)]) +
     guides(fill = guide_legend(nrow = 2)) +
     geom_hline(yintercept = 0.95, linetype = "dashed", color = "grey", 
                linewidth = 0.25) +
@@ -287,7 +293,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,8], ylimits[2,9])),
       scale_y_continuous(limits = c(ylimits[3,8], ylimits[3,9])),
       scale_y_continuous(limits = c(ylimits[4,8], ylimits[4,9])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+    scale_fill_manual(values = colors[c(1:11,13)]) +
     guides(fill = guide_legend(nrow = 2)) +
     labs(x = NULL, y = "Power of 95% CSs", fill = "")
   
@@ -319,7 +325,8 @@ for(k in 2:3)
               coverage_u = ceiling(max(coverage_CS95 + coverage_CS95_sd, 
                                        na.rm = T) * 20) / 20,
               powerCS_l = floor(min(power_CS95 - power_CS95_sd, na.rm = T) * 20) / 20,
-              powerCS_u = ceiling(max(power_CS95 + power_CS95_sd, na.rm = T) * 20) / 20)
+              powerCS_u = ceiling(max(power_CS95 + power_CS95_sd, na.rm = T) * 20) / 20) %>%
+    as.data.frame()
   
   p_FDR_0.9 = ggplot(filter(data, LD == lds[2] & pops == Pops), aes(
     x = factor(sprintf("%dk", N2/1e3), levels = N2_label), y = FDR_0.9)) +
@@ -339,7 +346,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,2], ylimits[2,3])),
       scale_y_continuous(limits = c(ylimits[3,2], ylimits[3,3])),
       scale_y_continuous(limits = c(ylimits[4,2], ylimits[4,3])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+    scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
     guides(fill = guide_legend(nrow = 1)) +
     geom_hline(yintercept = 0.1, linetype = "dashed", color = "grey", 
                linewidth = 0.25) +
@@ -364,7 +371,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,4], ylimits[2,5])),
       scale_y_continuous(limits = c(ylimits[3,4], ylimits[3,5])),
       scale_y_continuous(limits = c(ylimits[4,4], ylimits[4,5])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+    scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
     guides(fill = guide_legend(nrow = 1)) +
     labs(x = NULL, y = TeX("Power at CL or PIP \\geq 0.9"), fill = "")
   
@@ -387,7 +394,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,6], ylimits[2,7])),
       scale_y_continuous(limits = c(ylimits[3,6], ylimits[3,7])),
       scale_y_continuous(limits = c(ylimits[4,6], ylimits[4,7])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+    scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
     guides(fill = guide_legend(nrow = 1)) +
     geom_hline(yintercept = 0.95, linetype = "dashed", color = "grey", 
                linewidth = 0.25) +
@@ -412,7 +419,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,8], ylimits[2,9])),
       scale_y_continuous(limits = c(ylimits[3,8], ylimits[3,9])),
       scale_y_continuous(limits = c(ylimits[4,8], ylimits[4,9])))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+    scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
     guides(fill = guide_legend(nrow = 1)) +
     labs(x = NULL, y = "Power of 95% CSs", fill = "")
   

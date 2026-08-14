@@ -40,6 +40,11 @@ custom_theme = function()
     panel.border = element_rect(color = "black", linewidth = 0.5, fill = NA))
 }
 
+colors = c("#521A13","#996035FF","#DA2222",
+           "#FF9933FF","#FFDD00FF","#00AD00FF","#5D7A2BFF",
+           "#009393FF","#69D2E7FF","#0066CCFF",
+           "#1E2085FF","#8785B2FF","#953272FF")
+
 # UKBB LD
 plots = list()
 for(k in 2:3)
@@ -63,7 +68,7 @@ for(k in 2:3)
     scale_x_discrete(expand = expansion(mult = c(0.5,0.5)), 
                      breaks = N2_label, labels = c("20k" = TeX(
                        "$N^{(2)}=20k$"), "200k" = TeX("$N^{(2)}=200k$"))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+    scale_fill_manual(values = colors[c(1:11,13)]) +
     guides(fill = guide_legend(nrow = 2)) +
     labs(x = NULL, y = "Number of 95% CSs", fill = "")
   
@@ -80,7 +85,7 @@ for(k in 2:3)
     scale_x_discrete(expand = expansion(mult = c(0.5,0.5)), 
                      breaks = N2_label, labels = c("20k" = TeX(
                        "$N^{(2)}=20k$"), "200k" = TeX("$N^{(2)}=200k$"))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+    scale_fill_manual(values = colors[c(1:11,13)]) +
     guides(fill = guide_legend(nrow = 2)) +
     labs(x = NULL, y = "Size of 95% CSs", fill = "")
   
@@ -102,7 +107,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,2], 1)),
       scale_y_continuous(limits = c(ylimits[3,2], 1)),
       scale_y_continuous(limits = c(ylimits[4,2], 1)))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:11,13)]) +
+    scale_fill_manual(values = colors[c(1:11,13)]) +
     guides(fill = guide_legend(nrow = 2)) +
     labs(x = NULL, y = "Purity of 95% CSs", fill = "")
   
@@ -147,7 +152,7 @@ for(k in 2:3)
     scale_x_discrete(expand = expansion(mult = c(0.5,0.5)), 
                      breaks = N2_label, labels = c("20k" = TeX(
                        "$N^{(2)}=20k$"), "200k" = TeX("$N^{(2)}=200k$"))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+    scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
     guides(fill = guide_legend(nrow = 1)) +
     labs(x = NULL, y = "Number of 95% CSs", fill = "")
   
@@ -164,7 +169,7 @@ for(k in 2:3)
     scale_x_discrete(expand = expansion(mult = c(0.5,0.5)), 
                      breaks = N2_label, labels = c("20k" = TeX(
                        "$N^{(2)}=20k$"), "200k" = TeX("$N^{(2)}=200k$"))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+    scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
     guides(fill = guide_legend(nrow = 1)) +
     labs(x = NULL, y = "Size of 95% CSs", fill = "")
   
@@ -186,7 +191,7 @@ for(k in 2:3)
       scale_y_continuous(limits = c(ylimits[2,2], 1)),
       scale_y_continuous(limits = c(ylimits[3,2], 1)),
       scale_y_continuous(limits = c(ylimits[4,2], 1)))) +
-    scale_fill_manual(values = hue_pal()(13)[c(1:3,8:10,12,13)]) +
+    scale_fill_manual(values = colors[c(1:3,8:10,12,13)]) +
     guides(fill = guide_legend(nrow = 1)) +
     labs(x = NULL, y = "Purity of 95% CSs", fill = "")
   
